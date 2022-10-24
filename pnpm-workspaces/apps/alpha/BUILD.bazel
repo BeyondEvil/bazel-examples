@@ -1,5 +1,6 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_jest//jest:defs.bzl", "jest_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 npm_link_all_packages(name = "node_modules")
@@ -14,6 +15,27 @@ ts_project(
         "//:node_modules/@bazel-poc/shared",
         "//:node_modules/@types/node",
         "//:node_modules/star-wars-quotes",
+    ],
+)
+
+ts_project(
+    name = "alpha_test",
+    srcs = ["src/main.spec.ts"],
+    tsconfig = "//:tsconfig",
+    deps = [
+        ":alpha",
+        "//:node_modules/@types/jest",
+        "//:node_modules/@types/node",
+        "//:node_modules/jest",
+        "//:node_modules/ts-jest",
+    ],
+)
+
+jest_test(
+    name = "test",
+    config = "//:jest_config",
+    data = [
+        ":alpha_test",
     ],
 )
 
