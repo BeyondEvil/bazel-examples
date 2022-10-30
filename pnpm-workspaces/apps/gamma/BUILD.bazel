@@ -1,0 +1,47 @@
+load("//docker:js_image_layer.bzl", "js_image_layer")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load("@io_bazel_rules_docker//container:layer.bzl", "container_layer")
+
+js_library(
+    name = "gamma",
+    srcs = ["src/main.js"],
+    deps = [
+        "//:node_modules/express",
+    ],
+)
+
+js_binary(
+    name = "main",
+    data = [":gamma"],
+    entry_point = "src/main.js",
+)
+
+js_image_layer(
+    name = "layers",
+    binary = ":main",
+    root = "/app",
+    tags = ["no-remote-exec"],
+)
+
+container_layer(
+    name = "app_layer",
+    tars = [":layers/app.tar"],
+)
+
+container_layer(
+    name = "node_modules_layer",
+    tars = [":layers/node_modules.tar"],
+)
+
+container_image(
+    name = "image",
+    architecture = "arm64",
+    base = "@debian_arm64//image",
+    cmd = ["/app/apps/gamma/main.sh"],
+    entrypoint = ["bash"],
+    layers = [
+        ":app_layer",
+        ":node_modules_layer",
+    ],
+)
